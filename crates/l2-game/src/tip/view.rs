@@ -61,6 +61,7 @@ pub fn screen_byte(id: ScreenId, game: &Game) -> Option<u8> {
         | S::Index
         | S::Message
         | S::County(..)
+        | S::Realm(_)
         | S::Setup(_)
         | S::Lobby
         | S::Conquest

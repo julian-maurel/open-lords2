@@ -115,6 +115,7 @@ pub mod merchant;
 pub mod mercenary;
 pub mod mob;
 pub mod movement;
+pub mod overview;
 pub mod phase;
 pub mod population;
 pub mod ration;

@@ -73,6 +73,7 @@ pub mod movie;
 pub mod nobles;
 pub mod options;
 pub mod ratings;
+pub mod realm;
 pub mod saveload;
 pub mod supplies;
 pub mod setup;

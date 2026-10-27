@@ -4,6 +4,9 @@ use super::*;
 use super::*;
 use super::*;
 
+use crate::input::Key;
+use crate::screens::realm::{self, RealmView};
+
 impl Screen for MapScreen {
     fn id(&self) -> ScreenId {
         ScreenId::Campaign
@@ -190,6 +193,10 @@ impl Screen for MapScreen {
                     // corner of it, not the guard.
                     //
                     // arm: 0x0043AC23/end-turn left-press
+                    // [D] ours, `lotr2` D5: the alerts stand between this button and `Turn_End`.
+                    if self.asks_before_ending(ctx) {
+                        return Transition::Push(ScreenId::Realm(RealmView::EndTurn));
+                    }
                     let t = self.end_turn(ctx);
                     return if t == Transition::Stay { Transition::Reveal } else { t };
                 } else if let Some(b) = SIDEBAR_BUTTONS.iter().find(|b| b.rect().contains(x, y)) {
@@ -405,6 +412,10 @@ impl Screen for MapScreen {
                     // `docs/decisions.md` C61.
                     let _ = county;
                 }
+            }
+            // [D] ours, `lotr2` D5: the original has no letter key on the map.
+            Event::KeyDown(Key::Char(c)) if c.eq_ignore_ascii_case(&realm::KEY) => {
+                return Transition::Push(ScreenId::Realm(RealmView::Ledger));
             }
             _ => {}
         }

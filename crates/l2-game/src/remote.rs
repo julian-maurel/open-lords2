@@ -50,6 +50,8 @@ fn key(name: &str) -> Option<Key> {
         "left" => Key::Left,
         "right" => Key::Right,
         "backspace" => Key::Backspace,
+        // [D] ours, `lotr2` D5: one letter, as `Key::Char`.
+        s if s.chars().count() == 1 => Key::Char(s.chars().next()?),
         _ => return None,
     })
 }

@@ -117,6 +117,9 @@ pub struct Prefs {
     pub full_screen: bool,
     /// C259, `[D]` ours: body text in the heading face on a 3x plane. Off by default.
     pub sharp_text: bool,
+    /// [D] ours, `lotr2` D5: End Turn first shows the realm alerts. Off here, which is the
+    /// original; [`crate::prefs::load`] turns it on for a player whose file does not say.
+    pub end_turn_alerts: bool,
     /// The rest of `g_options` (`0x0053F1E0`, 0x468 bytes) we carry.
     pub kept: crate::prefs::Kept,
     /// [D] ours, C257: this install's id, generated once; a resumed network game seats by it.
@@ -139,6 +142,7 @@ impl Default for Prefs {
             debug_overlay: false,
             full_screen: true,
             sharp_text: false,
+            end_turn_alerts: false,
             kept: crate::prefs::Kept::default(),
             install: crate::net::InstallId::NIL,
         }

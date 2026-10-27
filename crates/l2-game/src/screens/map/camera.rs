@@ -99,6 +99,16 @@ impl MapScreen {
         self.centre_on_tile(anchor.0, anchor.1);
     }
 
+    /// [D] ours, `lotr2` D5: a single-player click that would end the turn, with an alert up.
+    pub(crate) fn asks_before_ending(&self, ctx: &Ctx) -> bool {
+        ctx.game.prefs.end_turn_alerts
+            && !ctx.game.multiplayer
+            && !ctx.game.net.lockstep
+            && !turn::turn_in_flight(ctx.game)
+            && self.fading.is_none()
+            && crate::screens::realm::has_alerts(ctx)
+    }
+
     /// `FUN_00476768` is the original's shape for the ending: dismissing the
     /// message that set `DAT_0053F0C4` calls `FUN_00497879` — which advances the
 /// campaign counter on a win — and sets `g_screenId = 0x1C`.

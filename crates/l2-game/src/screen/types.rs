@@ -104,6 +104,8 @@ pub enum ScreenId {
     /// Ours [D]: the help viewer standing in for `WinHelpA`. See [`crate::screens::help`].
     Help,
     Index,
+    /// Ours [D], `lotr2` D5: the realm ledger. [`crate::screens::realm`].
+    Realm(crate::screens::realm::RealmView),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -233,6 +235,7 @@ impl ScreenId {
             ScreenId::Movie(film) => Box::new(crate::screens::movie::MovieScreen::new(film)),
             ScreenId::Index => Box::new(crate::screens::index::IndexScreen::new()),
             ScreenId::Help => Box::new(crate::screens::help::HelpScreen::new()),
+            ScreenId::Realm(view) => Box::new(crate::screens::realm::RealmScreen::new(view)),
         }
     }
 }

@@ -130,6 +130,7 @@ fn before_the_campaign(id: crate::screen::ScreenId) -> bool {
         S::Movie(film) => film.is_front_end(),
         S::Campaign
         | S::County(..)
+        | S::Realm(_)
         | S::Village(..)
         | S::Job(..)
         | S::Conquest

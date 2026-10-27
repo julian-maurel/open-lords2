@@ -75,7 +75,11 @@ const KEYS: &[(&str, &str)] = &[
     ("FullScreen", "g_optFullScreen 0x0053F228"),
     // [D] ours: C259 sharp text.
     ("SharpText", "ours"),
+    // [D] ours, `lotr2` D5.
+    (END_TURN_ALERTS, "ours"),
 ];
+
+const END_TURN_ALERTS: &str = "EndTurnAlerts";
 
 /// `g_diploLetterDraft` (`0x0053F2B8`): four buffers of 200 bytes.
 pub const LETTER_BYTES: usize = 200;
@@ -196,6 +200,7 @@ fn value_of(p: &Prefs, key: &str) -> i32 {
         "DebugOverlay" => i32::from(p.debug_overlay),
         "FullScreen" => i32::from(p.full_screen),
         "SharpText" => i32::from(p.sharp_text),
+        END_TURN_ALERTS => i32::from(p.end_turn_alerts),
         _ => 0,
     }
 }
@@ -213,6 +218,7 @@ fn set(p: &mut Prefs, key: &str, v: i32) {
         "DebugOverlay" => p.debug_overlay = v != 0,
         "FullScreen" => p.full_screen = v != 0,
         "SharpText" => p.sharp_text = v != 0,
+        END_TURN_ALERTS => p.end_turn_alerts = v != 0,
         "CampaignMap" => p.kept.campaign_map = v.max(0) as usize,
         "CampaignTrack" => {
             p.kept.campaign_track =
@@ -274,11 +280,13 @@ pub fn decode(text: &str) -> Prefs {
 /// `Options_Load`, called once at start-up. A missing file leaves the defaults,
 /// which is the original's `__open` returning -1.
 pub fn load() -> Prefs {
-    let Some(path) = path() else { return Prefs::default() };
-    match std::fs::read_to_string(&path) {
-        Ok(text) => decode(&text),
-        Err(_) => Prefs::default(),
+    let text = path().and_then(|p| std::fs::read_to_string(p).ok()).unwrap_or_default();
+    let mut p = if text.is_empty() { Prefs::default() } else { decode(&text) };
+    // [D] ours, `lotr2` D5: on unless the file sets the key.
+    if !text.lines().any(|l| l.split_once('=').is_some_and(|(k, _)| k.trim() == END_TURN_ALERTS)) {
+        p.end_turn_alerts = true;
     }
+    p
 }
 
 /// `Options_Save`. [D] ours: called whenever the block changes, not once after
@@ -334,6 +342,7 @@ mod tests {
             debug_overlay: true,
             full_screen: false,
             sharp_text: true,
+            end_turn_alerts: true,
             kept: Kept {
                 player_name: PlayerName::new("Ed; the Bold"),
                 setup: {
@@ -414,7 +423,22 @@ mod tests {
         assert_eq!(written, dir.join(FILE));
         assert_eq!(load(), flipped());
         let _ = std::fs::remove_dir_all(&dir);
-        assert_eq!(load(), Prefs::default(), "a missing file leaves the defaults");
+        let ours = Prefs { end_turn_alerts: true, ..Prefs::default() };
+        assert_eq!(load(), ours, "a missing file leaves the defaults, and D5's alerts on");
+    }
+
+    /// [D] ours, `lotr2` D5.
+    #[test]
+    fn the_end_turn_alerts_are_on_unless_the_file_turns_them_off() {
+        let dir = std::env::temp_dir().join(format!("l2-prefs-alerts-{}", std::process::id()));
+        let _scope = crate::saves::scoped_dir(&dir);
+        save(&Prefs::default()).unwrap();
+        assert!(!load().end_turn_alerts, "the file says 0");
+        let text = std::fs::read_to_string(dir.join(FILE)).unwrap();
+        let without: String = text.lines().filter(|l| !l.starts_with(END_TURN_ALERTS)).map(|l| format!("{l}\n")).collect();
+        std::fs::write(dir.join(FILE), without).unwrap();
+        assert!(load().end_turn_alerts, "a file from before D5 does not name the key");
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
