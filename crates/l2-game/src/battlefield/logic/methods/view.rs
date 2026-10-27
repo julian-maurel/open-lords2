@@ -274,9 +274,12 @@ impl LiveBattle {
     /// `docs/decisions.md` C60. Without it the battle camera would move 62 cells
     /// a second.
     ///
+    /// `[D]` ours: `keys` is the direction of the keys the player holds. It
+    /// scrolls at the same rate when the pointer is not at an edge.
+    ///
     /// // arm: 0x00432221/battle-edge-scroll hover-at-edge
-    pub fn edge_scroll(&mut self, scroll_speed: i32) -> bool {
-        let Some(dir) = self.edge_direction() else {
+    pub fn edge_scroll(&mut self, scroll_speed: i32, keys: Option<ScrollDir>) -> bool {
+        let Some(dir) = self.edge_direction().or(keys) else {
             self.scroll_wait = 0;
             return false;
         };

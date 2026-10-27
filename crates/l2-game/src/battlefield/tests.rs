@@ -142,5 +142,22 @@ mod tests {
         assert!(b.has_charged(1) && b.has_charged(2));
         assert!(!b.press_charge(), "seat 1 has had its charge");
     }
+
+    #[test]
+    fn a_held_key_direction_is_the_scroll_direction_with_that_delta() {
+        for d in [
+            ScrollDir::N,
+            ScrollDir::NE,
+            ScrollDir::E,
+            ScrollDir::SE,
+            ScrollDir::S,
+            ScrollDir::SW,
+            ScrollDir::W,
+            ScrollDir::NW,
+        ] {
+            assert_eq!(ScrollDir::from_delta(d.delta()), Some(d));
+        }
+        assert_eq!(ScrollDir::from_delta((0, 0)), None, "no key held");
+    }
 }
 

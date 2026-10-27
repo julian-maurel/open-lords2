@@ -131,18 +131,20 @@ fn a_pointer_at_the_edge_scrolls_and_a_pointer_just_inside_it_does_not() {
         s.viewport()
     };
 
-    assert_eq!(run((309.0, 781.0)), Viewport::new(40, 19), "the picture's left column");
-    assert_eq!(run((1588.0, 781.0)), Viewport::new(40, 21), "and its right one");
+    // The picture fills the width of this window, so the left and right
+    // columns of the picture are the edges of the window.
+    assert_eq!(run((0.0, 782.0)), Viewport::new(40, 19), "the picture's left column");
+    assert_eq!(run((1897.0, 782.0)), Viewport::new(40, 21), "and its right one");
 
-    assert_eq!(run((0.0, 781.0)), Viewport::new(40, 19), "the far left of the window");
-    assert_eq!(run((1897.0, 781.0)), Viewport::new(40, 21), "the far right");
-    assert_eq!(run((949.0, 0.0)), Viewport::new(38, 20), "the top");
-    assert_eq!(run((949.0, 1561.0)), Viewport::new(42, 20), "the bottom");
+    assert_eq!(run((949.0, 0.0)), Viewport::new(38, 20), "the bar above the picture");
+    assert_eq!(run((949.0, 72.0)), Viewport::new(38, 20), "the picture's top row");
+    assert_eq!(run((949.0, 1561.0)), Viewport::new(42, 20), "the bar below the picture");
     assert_eq!(run((0.0, 0.0)), Viewport::new(38, 19), "the top-left corner");
 
-    assert_eq!(run((311.0, 781.0)), start, "one canvas pixel in from the left");
-    assert_eq!(run((1586.0, 781.0)), start, "and from the right");
-    assert_eq!(run((949.0, 781.0)), start, "and the middle of the screen");
+    assert_eq!(run((3.0, 782.0)), start, "one canvas pixel in from the left");
+    assert_eq!(run((1894.0, 782.0)), start, "and from the right");
+    assert_eq!(run((949.0, 73.0)), start, "and from the top");
+    assert_eq!(run((950.0, 782.0)), start, "and the middle of the screen");
 
 }
 
@@ -181,6 +183,31 @@ fn holding_the_pointer_at_the_edge_scrolls_at_the_originals_rate() {
         s.update(&mut ctx);
     }
     assert_eq!(s.viewport(), settled);
+}
+
+#[test]
+fn a_held_direction_key_scrolls_like_the_pointer_at_that_edge() {
+    use crate::input::ScrollKey;
+    let assets = crate::game::Assets::placeholder();
+    let start = Viewport::new(40, 20);
+    let run = |keys: &[ScrollKey]| -> Viewport {
+        let mut game = crate::Game::new(1);
+        for k in keys {
+            game.held_scroll.set(*k, true);
+        }
+        let mut s = MapScreen::new();
+        s.view = start;
+        s.pointer = (240, 240);
+        s.pointer_in = true;
+        let mut ctx = Ctx { game: &mut game, assets: &assets };
+        s.update(&mut ctx);
+        s.viewport()
+    };
+    assert_eq!(run(&[ScrollKey::Up]), Viewport::new(38, 20), "as the top edge");
+    assert_eq!(run(&[ScrollKey::Right]), Viewport::new(40, 21), "as the right edge");
+    assert_eq!(run(&[ScrollKey::Up, ScrollKey::Left]), Viewport::new(38, 19), "as the top-left corner");
+    assert_eq!(run(&[]), start, "no key, no scroll");
+    assert_eq!(run(&[ScrollKey::Left, ScrollKey::Right]), start, "opposite keys cancel");
 }
 
 #[test]

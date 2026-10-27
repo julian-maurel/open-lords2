@@ -19,6 +19,23 @@ use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::keyboard::{Key as WinitKey, NamedKey};
 use winit::window::{CursorIcon, Window, WindowId};
 
+/// `[D]` ours: the keys that scroll the view, chosen by their position on the
+/// keyboard and not by their letter. The W, A, S and D positions of a US
+/// keyboard carry Z, Q, S and D on a French AZERTY keyboard, so the same four
+/// keys work on both. See [`l2_game::input::HeldScroll`].
+pub(super) fn scroll_key(key: &winit::keyboard::PhysicalKey) -> Option<l2_game::input::ScrollKey> {
+    use l2_game::input::ScrollKey;
+    use winit::keyboard::{KeyCode, PhysicalKey};
+    let PhysicalKey::Code(code) = key else { return None };
+    Some(match code {
+        KeyCode::ArrowUp | KeyCode::KeyW => ScrollKey::Up,
+        KeyCode::ArrowDown | KeyCode::KeyS => ScrollKey::Down,
+        KeyCode::ArrowLeft | KeyCode::KeyA => ScrollKey::Left,
+        KeyCode::ArrowRight | KeyCode::KeyD => ScrollKey::Right,
+        _ => return None,
+    })
+}
+
 /// `ctrl` is the window procedure's `DAT_004DF3A8` — `0x004B29BE` latches
 /// `VK_CONTROL` on key-down and clears it on key-up, and its digit arm calls a
 /// different function depending on it. Only the digits carry the modifier,

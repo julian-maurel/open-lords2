@@ -59,6 +59,23 @@ impl MapScreen {
         }
     }
 
+    /// `[D]` ours: the direction of the keys the player holds, as
+    /// [`crate::input::HeldScroll::delta`] gives it. The map scrolls with it at
+    /// the edge scroll's rate when the pointer is not at an edge.
+    pub(super) fn key_direction(delta: (i32, i32)) -> Option<Dir> {
+        match delta {
+            (0, -1) => Some(Dir::N),
+            (1, -1) => Some(Dir::NE),
+            (1, 0) => Some(Dir::E),
+            (1, 1) => Some(Dir::SE),
+            (0, 1) => Some(Dir::S),
+            (-1, 1) => Some(Dir::SW),
+            (-1, 0) => Some(Dir::W),
+            (-1, -1) => Some(Dir::NW),
+            _ => None,
+        }
+    }
+
     pub(crate) fn scroll(&mut self, dir: Dir) -> bool {
         match self.view.scrolled(dir, &self.zoom) {
             Some(v) => {

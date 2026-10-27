@@ -204,11 +204,12 @@ impl Screen for BattlefieldScreen {
             ctx.game.films.finished = None;
         }
         let speed = ctx.game.prefs.scroll_speed;
+        let keys = battlefield::ScrollDir::from_delta(ctx.game.held_scroll.delta());
         let Some(live) = BattlefieldScreen::live(ctx) else { return Transition::Pop };
         if after_film {
             live.skip_outcome();
         }
-        live.edge_scroll(speed);
+        live.edge_scroll(speed, keys);
         // In a network game `net::frame` steps the battle on its tick.
         if !live.deferred {
             live.tick();

@@ -3,29 +3,91 @@ pub mod window {
     pub const CANVAS_W: u32 = 640;
     pub const CANVAS_H: u32 = 480;
 
+    /// The whole multiple of 640 × 480 that fits the window. The buffer, the
+    /// cursors and the F5 snap use it.
     pub fn scale(window_w: u32, window_h: u32) -> u32 {
         (window_w / CANVAS_W).min(window_h / CANVAS_H).max(1)
     }
 
-    pub fn origin(window_w: u32, window_h: u32) -> (i32, i32) {
-        let s = scale(window_w, window_h) as i32;
+    /// `[D]` ours: the picture fills the window at the largest scale that keeps
+    /// its 4:3 shape, as `pixels::ScalingMode::Fill` draws it. Black bars stay
+    /// only on the two sides where the window is wider or taller than 4:3.
+    pub fn fill_scale(window_w: u32, window_h: u32) -> f64 {
+        (window_w as f64 / CANVAS_W as f64).min(window_h as f64 / CANVAS_H as f64)
+    }
+
+    /// The window position of the picture's top-left corner at [`fill_scale`].
+    pub fn origin(window_w: u32, window_h: u32) -> (f64, f64) {
+        let s = fill_scale(window_w, window_h);
         (
-            (window_w as i32 - CANVAS_W as i32 * s) / 2,
-            (window_h as i32 - CANVAS_H as i32 * s) / 2,
+            (window_w as f64 - CANVAS_W as f64 * s) / 2.0,
+            (window_h as f64 - CANVAS_H as f64 * s) / 2.0,
         )
     }
 
+    /// A position in the window to a canvas pixel. A position over a black bar
+    /// clamps to the nearest edge of the picture, so the edge scroll still works
+    /// with the pointer against the edge of the screen.
     pub fn to_canvas(window_w: u32, window_h: u32, x: f64, y: f64) -> (i32, i32) {
-        let s = scale(window_w, window_h) as i32;
+        let s = fill_scale(window_w, window_h);
         let (ox, oy) = origin(window_w, window_h);
-        let px = (x.floor() as i32 - ox).div_euclid(s);
-        let py = (y.floor() as i32 - oy).div_euclid(s);
+        let px = ((x - ox) / s).floor() as i32;
+        let py = ((y - oy) / s).floor() as i32;
         (px.clamp(0, CANVAS_W as i32 - 1), py.clamp(0, CANVAS_H as i32 - 1))
     }
 
     pub fn snapped(window_w: u32, window_h: u32) -> (u32, u32) {
         let s = scale(window_w, window_h);
         (CANVAS_W * s, CANVAS_H * s)
+    }
+}
+
+/// A direction key the player holds down.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ScrollKey {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+/// `[D]` ours: the keys that scroll the campaign map and the battlefield while
+/// the player holds them. The window maps the arrow keys and the keys at the
+/// W, A, S and D positions of a US keyboard to these four directions. On a
+/// French AZERTY keyboard those positions carry Z, Q, S and D. The original
+/// scrolls only with the pointer at the edge of the screen.
+///
+/// not-encoded: presentation. The view a person looks at cannot change a
+/// number in the world.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct HeldScroll {
+    up: bool,
+    down: bool,
+    left: bool,
+    right: bool,
+}
+
+impl HeldScroll {
+    pub fn set(&mut self, key: ScrollKey, held: bool) {
+        match key {
+            ScrollKey::Up => self.up = held,
+            ScrollKey::Down => self.down = held,
+            ScrollKey::Left => self.left = held,
+            ScrollKey::Right => self.right = held,
+        }
+    }
+
+    /// The window lost the keyboard, so it will not see the keys come up.
+    pub fn release_all(&mut self) {
+        *self = HeldScroll::default();
+    }
+
+    /// The step on each axis: -1, 0 or 1. Two opposite keys cancel each other.
+    pub fn delta(&self) -> (i32, i32) {
+        (
+            i32::from(self.right) - i32::from(self.left),
+            i32::from(self.down) - i32::from(self.up),
+        )
     }
 }
 
@@ -251,20 +313,55 @@ mod tests {
         use window::*;
         let (w, h) = (1898u32, 1562u32);
         assert_eq!(scale(w, h), 2, "1898/640 is 2, and 1562/480 is 3");
-        assert_eq!(origin(w, h), (309, 301), "(1898 - 1280) / 2, (1562 - 960) / 2");
+        assert_eq!(fill_scale(w, h), 1898.0 / 640.0, "the width limits the picture");
+        let (ox, oy) = origin(w, h);
+        assert!(ox.abs() < 1e-9 && (oy - 69.25).abs() < 1e-9, "(1562 - 480 x 2.965625) / 2, got {oy}");
 
-        assert_eq!(to_canvas(w, h, 309.0, 781.0).0, 0, "the picture's left column");
-        assert_eq!(to_canvas(w, h, 1588.0, 781.0).0, 639, "and its right one");
+        assert_eq!(to_canvas(w, h, 0.0, 781.0).0, 0, "the picture's left column");
+        assert_eq!(to_canvas(w, h, 1897.0, 781.0).0, 639, "and its right one");
 
-        assert_eq!(to_canvas(w, h, 0.0, 781.0).0, 0, "the far left of the window");
-        assert_eq!(to_canvas(w, h, 1897.0, 781.0).0, 639, "the far right");
-        assert_eq!(to_canvas(w, h, 949.0, 0.0).1, 0, "the top");
-        assert_eq!(to_canvas(w, h, 949.0, 1561.0).1, 479, "the bottom");
+        assert_eq!(to_canvas(w, h, 949.0, 0.0).1, 0, "the bar above the picture");
+        assert_eq!(to_canvas(w, h, 949.0, 72.0).1, 0, "the picture's top row");
+        assert_eq!(to_canvas(w, h, 949.0, 1492.0).1, 479, "the picture's bottom row");
+        assert_eq!(to_canvas(w, h, 949.0, 1561.0).1, 479, "the bar below the picture");
 
-        assert_eq!(to_canvas(w, h, 311.0, 781.0).0, 1);
-        assert_eq!(to_canvas(w, h, 1586.0, 781.0).0, 638);
+        assert_eq!(to_canvas(w, h, 3.0, 781.0).0, 1);
+        assert_eq!(to_canvas(w, h, 1894.0, 781.0).0, 638);
+        assert_eq!(to_canvas(w, h, 949.0, 73.0).1, 1);
 
-        assert_eq!(to_canvas(w, h, 949.0, 781.0), (320, 240));
+        assert_eq!(to_canvas(w, h, 950.0, 782.0), (320, 240));
+    }
+
+    #[test]
+    fn the_picture_fills_the_height_of_a_wide_screen_and_keeps_its_shape() {
+        use window::*;
+        let (w, h) = (3024u32, 1890u32);
+        assert_eq!(scale(w, h), 3, "the whole-number scale leaves bars on four sides");
+        let s = fill_scale(w, h);
+        assert_eq!(s, 3.9375, "1890 / 480");
+        assert_eq!(480.0 * s, h as f64, "the picture is as tall as the screen");
+        assert_eq!(origin(w, h), (252.0, 0.0), "(3024 - 2520) / 2 on each side");
+
+        assert_eq!(to_canvas(w, h, 100.0, 945.0), (0, 240), "the bar on the left");
+        assert_eq!(to_canvas(w, h, 252.0, 0.0), (0, 0));
+        assert_eq!(to_canvas(w, h, 1512.0, 945.0), (320, 240));
+        assert_eq!(to_canvas(w, h, 3023.0, 1889.0), (639, 479), "the bar on the right");
+    }
+
+    #[test]
+    fn held_scroll_keys_give_one_step_per_axis_and_opposite_keys_cancel() {
+        let mut held = HeldScroll::default();
+        assert_eq!(held.delta(), (0, 0));
+        held.set(ScrollKey::Up, true);
+        held.set(ScrollKey::Left, true);
+        assert_eq!(held.delta(), (-1, -1));
+        held.set(ScrollKey::Right, true);
+        assert_eq!(held.delta(), (0, -1), "left and right cancel");
+        held.set(ScrollKey::Up, false);
+        held.set(ScrollKey::Down, true);
+        assert_eq!(held.delta(), (0, 1));
+        held.release_all();
+        assert_eq!(held.delta(), (0, 0));
     }
 
     #[test]
@@ -283,7 +380,7 @@ mod tests {
             assert_eq!(scale(w, h), want, "{w}x{h}");
             let (sw, sh) = snapped(w, h);
             assert_eq!((sw, sh), (640 * want, 480 * want));
-            assert_eq!(origin(sw, sh), (0, 0), "a snapped window has no border");
+            assert_eq!(origin(sw, sh), (0.0, 0.0), "a snapped window has no border");
             assert_eq!(snapped(sw, sh), (sw, sh), "and snapping it again changes nothing");
         }
     }

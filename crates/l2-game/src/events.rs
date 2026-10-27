@@ -40,7 +40,14 @@ impl ApplicationHandler for App {
         let surface =
             SurfaceTexture::new(size.width.max(1), size.height.max(1), Arc::clone(&window));
         let k = self.buffer_scale(size.width, size.height);
-        let pixels = Pixels::new(CANVAS_W * k, CANVAS_H * k, surface).expect("create pixels");
+        let mut pixels = Pixels::new(CANVAS_W * k, CANVAS_H * k, surface).expect("create pixels");
+        // [D] ours: the picture fills the window and keeps its 4:3 shape, at the
+        // scale `input::window::fill_scale` gives. The new mode takes effect at
+        // the next `resize_surface`, so the surface is resized at once.
+        pixels.set_scaling_mode(pixels::ScalingMode::Fill);
+        if let Err(e) = pixels.resize_surface(size.width.max(1), size.height.max(1)) {
+            eprintln!("resize failed: {e}");
+        }
         self.window = Some(window);
         self.pixels = Some(pixels);
         self.build_cursors(event_loop);
@@ -115,8 +122,15 @@ impl ApplicationHandler for App {
                 self.ctrl = mods.state().control_key();
                 self.alt = mods.state().alt_key();
             }
-            WindowEvent::KeyboardInput { event, .. } if event.state.is_pressed() => {
-                if event.logical_key == WinitKey::Named(NamedKey::F5) {
+            WindowEvent::Focused(false) => self.game.held_scroll.release_all(),
+            WindowEvent::KeyboardInput { event, .. } => {
+                if let Some(key) = scroll_key(&event.physical_key) {
+                    let held = event.state.is_pressed() && !self.ctrl && !self.alt;
+                    self.game.held_scroll.set(key, held);
+                }
+                if !event.state.is_pressed() {
+                    // A key that comes up does nothing else.
+                } else if event.logical_key == WinitKey::Named(NamedKey::F5) {
                     // App_WndProc 0x004B29BE case 0x74: `if (g_optFullScreen == 0)`.
                     if !self.game.prefs.full_screen {
                         self.snap_to_whole_scale();

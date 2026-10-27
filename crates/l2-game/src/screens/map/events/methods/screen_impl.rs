@@ -468,7 +468,8 @@ impl Screen for MapScreen {
         self.scroll_wait = self.scroll_wait.saturating_sub(1);
         // arm: 0x00432221/map-edge-scroll hover-at-edge
         if self.scroll_wait == 0 && every != u32::MAX {
-            if let Some(dir) = self.edge_direction() {
+            let keys = MapScreen::key_direction(ctx.game.held_scroll.delta());
+            if let Some(dir) = self.edge_direction().or(keys) {
                 self.scroll_wait = every;
                 if self.scroll(dir) {
                     self.scrolled = true;

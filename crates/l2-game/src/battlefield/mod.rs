@@ -199,6 +199,24 @@ impl ScrollDir {
             ScrollDir::NW => (-1, -1),
         }
     }
+
+    /// `[D]` ours: the direction of the keys the player holds, as
+    /// [`crate::input::HeldScroll::delta`] gives it. `None` when no key or two
+    /// opposite keys are held.
+    pub fn from_delta(delta: (i32, i32)) -> Option<ScrollDir> {
+        [
+            ScrollDir::N,
+            ScrollDir::NE,
+            ScrollDir::E,
+            ScrollDir::SE,
+            ScrollDir::S,
+            ScrollDir::SW,
+            ScrollDir::W,
+            ScrollDir::NW,
+        ]
+        .into_iter()
+        .find(|d| d.delta() == delta)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
