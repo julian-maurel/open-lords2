@@ -52,6 +52,8 @@ struct App {
     /// battle control group; without, recall one.
     ctrl: bool,
     alt: bool,
+    /// [D] ours, `lotr2` D6: whether the macOS Command key is held.
+    cmd: bool,
     /// What `prefs.ini` last held; `persist_prefs` writes on a difference.
     saved_prefs: l2_game::game::Prefs,
     last_press: Option<(Instant, (i32, i32))>,
@@ -162,6 +164,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         ticker: l2_game::clock::Ticker::new(),
         last_cursor: (0, 0),
         ctrl: false,
+        cmd: false,
         alt: false,
         saved_prefs: prefs,
         last_press: None,

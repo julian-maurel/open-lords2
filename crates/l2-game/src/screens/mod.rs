@@ -48,6 +48,7 @@ pub mod armoury;
 pub mod army;
 pub mod battle;
 pub mod battlefield;
+pub mod cheat;
 pub mod castle;
 pub mod confirm;
 pub mod net_halt;

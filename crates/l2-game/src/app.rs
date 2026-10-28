@@ -40,7 +40,8 @@ pub(super) fn scroll_key(key: &winit::keyboard::PhysicalKey) -> Option<l2_game::
 /// `VK_CONTROL` on key-down and clears it on key-up, and its digit arm calls a
 /// different function depending on it. Only the digits carry the modifier,
 /// because only the digits are dispatched on it.
-pub(super) fn translate(key: &WinitKey, ctrl: bool) -> Option<Key> {
+/// [D] ours, `lotr2` D6: `cmd` is the macOS Command key, and it wins over `ctrl`.
+pub(super) fn translate(key: &WinitKey, ctrl: bool, cmd: bool) -> Option<Key> {
     Some(match key {
         WinitKey::Named(NamedKey::Escape) => Key::Escape,
         WinitKey::Named(NamedKey::Enter) => Key::Enter,
@@ -58,6 +59,7 @@ pub(super) fn translate(key: &WinitKey, ctrl: bool) -> Option<Key> {
         WinitKey::Named(NamedKey::F3) => Key::F3,
         WinitKey::Named(NamedKey::F4) => Key::F4,
         WinitKey::Named(NamedKey::F12) => Key::F12,
+        WinitKey::Character(s) if cmd => Key::cmd_letter(s.chars().next()?),
         WinitKey::Character(s) if ctrl => Key::ctrl_letter(s.chars().next()?),
         WinitKey::Character(s) => Key::letter(s.chars().next()?),
         _ => return None,

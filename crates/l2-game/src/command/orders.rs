@@ -76,4 +76,5 @@ orders! {
     SetIndustryShare { county: usize, share: i32 }
     ToComputer { realm: u8 }
     BeginMove {}
+    ApplyCheat { cheat: u8 }
 }

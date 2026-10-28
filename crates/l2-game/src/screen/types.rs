@@ -106,6 +106,8 @@ pub enum ScreenId {
     Index,
     /// Ours [D], `lotr2` D5: the realm ledger. [`crate::screens::realm`].
     Realm(crate::screens::realm::RealmView),
+    /// Ours [D], `lotr2` D6: the cheat menu. [`crate::screens::cheat`].
+    Cheat,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -236,6 +238,7 @@ impl ScreenId {
             ScreenId::Index => Box::new(crate::screens::index::IndexScreen::new()),
             ScreenId::Help => Box::new(crate::screens::help::HelpScreen::new()),
             ScreenId::Realm(view) => Box::new(crate::screens::realm::RealmScreen::new(view)),
+            ScreenId::Cheat => Box::new(crate::screens::cheat::CheatScreen::new()),
         }
     }
 }

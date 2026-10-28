@@ -131,6 +131,9 @@ pub enum Key {
     /// on [`Key::Char`] would invite a screen to handle the digit and then
     /// branch, which is the shape that produces a modifier that half-works.
     CtrlChar(char),
+    /// [D] ours, `lotr2` D6: a letter with the macOS Command key, for the cheats.
+    /// [`crate::screens::cheat`].
+    CmdChar(char),
 }
 
 impl Key {
@@ -140,6 +143,10 @@ impl Key {
 
     pub fn ctrl_letter(c: char) -> Key {
         Key::CtrlChar(c.to_ascii_uppercase())
+    }
+
+    pub fn cmd_letter(c: char) -> Key {
+        Key::CmdChar(c.to_ascii_uppercase())
     }
 }
 

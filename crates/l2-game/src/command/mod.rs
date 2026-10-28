@@ -105,6 +105,7 @@ commands! {
     36 SetIndustryShare,
     37 ToComputer,
     38 BeginMove,
+    39 ApplyCheat,
 }
 
 /// The slot this machine issues from. `[I]` one seat until the lobby's

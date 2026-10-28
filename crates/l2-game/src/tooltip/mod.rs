@@ -137,7 +137,7 @@ pub fn screen_byte(id: ScreenId, game: &Game, mode: Option<u8>) -> Option<u8> {
         S::Divide(_) | S::DivideCastle(..) => Some(0x11),
         S::BattlePrompt => Some(0x12),
         S::BattleResult => Some(0x13),
-        S::County(_, Panel::Population) | S::Realm(_) => Some(0x14),
+        S::County(_, Panel::Population) | S::Realm(_) | S::Cheat => Some(0x14),
         S::County(_, Panel::Tax) => Some(0x15),
         S::County(_, Panel::Happiness) => Some(0x16),
         S::RaiseArmy(_) => Some(0x17),

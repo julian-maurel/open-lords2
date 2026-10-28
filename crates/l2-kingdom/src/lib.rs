@@ -94,6 +94,7 @@ pub mod ai_army;
 pub mod ai_farm;
 pub mod arrival;
 pub mod battle;
+pub mod cheat;
 pub mod conquest;
 pub mod county;
 pub mod diplomacy;

@@ -52,6 +52,8 @@ fn key(name: &str) -> Option<Key> {
         "backspace" => Key::Backspace,
         // [D] ours, `lotr2` D5: one letter, as `Key::Char`.
         s if s.chars().count() == 1 => Key::Char(s.chars().next()?),
+        // [D] ours, `lotr2` D6: `cmd+g` is Cmd+G.
+        s if s.starts_with("cmd+") && s.chars().count() == 5 => Key::cmd_letter(s.chars().nth(4)?),
         _ => return None,
     })
 }

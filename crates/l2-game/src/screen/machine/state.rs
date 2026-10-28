@@ -122,6 +122,18 @@ impl Machine {
             self.dirty = true;
             return;
         }
+        // [D] ours, `lotr2` D6: Cmd+letter is a cheat, taken before the stack like Ctrl+D.
+        // With the menu on top, the menu takes it.
+        if let Event::KeyDown(crate::input::Key::CmdChar(c)) = event {
+            if self.top_id() != Some(ScreenId::Cheat) {
+                if crate::screens::cheat::shortcut(c, &self.ids(), ctx.game) {
+                    self.push(ScreenId::Cheat);
+                    self.trace_screen(ctx.game);
+                }
+                self.dirty = true;
+                return;
+            }
+        }
         // [V] App_WndProc 0x004B29BE `case 0x1b: if (g_appPhase == 3) Menu_Quit();`
         // — ungated by g_screenId, so in a game Escape raises the exit box over
         // any screen and closes none. Menu_Quit 0x004343F8 = Ui_OpenConfirm(0).

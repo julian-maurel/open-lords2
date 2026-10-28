@@ -191,6 +191,17 @@ impl Order for BeginMove {
     }
 }
 
+/// [D] ours, `lotr2` D6: `cheat` indexes `Cheat::LIST`; an index past the list changes nothing.
+impl Order for ApplyCheat {
+    type Reply = bool;
+    fn run(self, game: &mut Game) -> bool {
+        let Some(&cheat) = l2_kingdom::cheat::Cheat::LIST.get(self.cheat as usize) else {
+            return false;
+        };
+        l2_kingdom::cheat::apply(&mut game.kingdom, game.player, cheat)
+    }
+}
+
 via_game! {
     SetTaxRate -> bool = |g, o| g.set_tax_rate(o.county, o.rate);
     SetRation -> bool = |g, o| g.set_ration(o.county, o.level);

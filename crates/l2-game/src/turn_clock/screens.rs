@@ -49,8 +49,8 @@ pub fn screen_byte(id: ScreenId) -> Option<u8> {
         ScreenId::Divide(_) | ScreenId::DivideCastle(..) => 0x11,
         ScreenId::BattlePrompt => 0x12,
         ScreenId::BattleResult => 0x13,
-        // [D] ours, `lotr2` D5: the ledger is a county panel to the turn end and the timer.
-        ScreenId::County(_, Panel::Population) | ScreenId::Realm(_) => 0x14,
+        // [D] ours, `lotr2` D5 and D6: the ledger and the cheat menu are a county panel to the turn end and the timer.
+        ScreenId::County(_, Panel::Population) | ScreenId::Realm(_) | ScreenId::Cheat => 0x14,
         ScreenId::County(_, Panel::Tax) => 0x15,
         ScreenId::County(_, Panel::Happiness) => 0x16,
         ScreenId::RaiseArmy(_) => 0x17,

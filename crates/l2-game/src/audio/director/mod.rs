@@ -131,6 +131,7 @@ fn before_the_campaign(id: crate::screen::ScreenId) -> bool {
         S::Campaign
         | S::County(..)
         | S::Realm(_)
+        | S::Cheat
         | S::Village(..)
         | S::Job(..)
         | S::Conquest

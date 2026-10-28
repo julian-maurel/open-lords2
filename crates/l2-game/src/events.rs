@@ -121,11 +121,12 @@ impl ApplicationHandler for App {
             WindowEvent::ModifiersChanged(mods) => {
                 self.ctrl = mods.state().control_key();
                 self.alt = mods.state().alt_key();
+                self.cmd = mods.state().super_key();
             }
             WindowEvent::Focused(false) => self.game.held_scroll.release_all(),
             WindowEvent::KeyboardInput { event, .. } => {
                 if let Some(key) = scroll_key(&event.physical_key) {
-                    let held = event.state.is_pressed() && !self.ctrl && !self.alt;
+                    let held = event.state.is_pressed() && !self.ctrl && !self.alt && !self.cmd;
                     self.game.held_scroll.set(key, held);
                 }
                 if !event.state.is_pressed() {
@@ -140,10 +141,10 @@ impl ApplicationHandler for App {
                 } else if self.alt && event.logical_key == WinitKey::Named(NamedKey::Enter) {
                     self.toggle_full_screen();
                 } else {
-                    if let Some(key) = translate(&event.logical_key, self.ctrl) {
+                    if let Some(key) = translate(&event.logical_key, self.ctrl, self.cmd) {
                         self.deliver(GameEvent::KeyDown(key));
                     }
-                    if !self.ctrl {
+                    if !self.ctrl && !self.cmd {
                         for c in event.text.iter().flat_map(|t| t.chars()) {
                             self.deliver(GameEvent::Text(c));
                         }
